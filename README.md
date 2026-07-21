@@ -79,6 +79,17 @@ docker compose up --build         # API on :8000, Postgres, Redis
 ./scripts/run-tests.sh            # API lint + types + tests, web build
 ```
 
+Pre-ship load/robustness gate (bounded and self-cleaning — safe to run):
+
+```bash
+python scripts/stress_test.py     # ~30s; hard caps on requests, memory, and disk
+```
+
+It drives real concurrent HTTP load at a throwaway server instance and asserts
+the governance invariants hold under stress. Because the in-memory stores have
+no eviction this phase, the harness aborts if the server's RSS or the audit log
+crosses a cap. All limits are env-overridable (`STRESS_*`).
+
 ## Privacy
 
 Do not commit private exports, transcripts, recordings, generated records, real
