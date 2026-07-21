@@ -1,55 +1,103 @@
 # Naismith
 
-Naismith is a **voice-first, memory-enabled, constitutionally bounded AI agent**
-that runs and improves interviews, conducts structured simulations, learns only
-through controlled and reviewable evaluation loops, and uses a user-controlled
-Legend Vault (Obsidian-compatible Markdown) as its knowledge base.
+Naismith is a **general-purpose, constitutionally bounded personal AI operating
+system**. It gives the user one continuous interface, one governed memory, and
+one control layer for coordinating AI models, agents, tools, files, projects,
+and applications.
 
-It is built around a strict, testable [Constitution](constitution/NAISMITH_CONSTITUTION.md)
-that outranks prompts, tools, memories, and optimization targets. The full
-product spec, architecture, and delivery plan live in
-[`docs/NAISMITH_CLAUDE_CODE_HANDOFF.md`](docs/NAISMITH_CLAUDE_CODE_HANDOFF.md) —
-**read it before changing the repository.**
+The name is basketball-inspired. **The product is not basketball-focused.**
 
-## Core principles
+Naismith is also **not primarily an interview agent**. Interviews may become one
+optional workflow beside business, research, planning, coding, learning, and
+other personal operations.
 
-- Human authority remains primary.
-- Autonomy is scoped, granted, and revocable — default authority is zero.
-- Memory has provenance and deletion controls.
-- Interview scoring is evidence-linked and reviewable.
-- Simulations cannot promote themselves to production.
-- Private data and secrets never belong in this public repository.
+Read the authoritative handoff before changing the repository:
 
-## Status — Phase 0/1 vertical slice
+- [`docs/NAISMITH_CLAUDE_CODE_HANDOFF.md`](docs/NAISMITH_CLAUDE_CODE_HANDOFF.md)
+- [`docs/CLAUDE_START_HERE.md`](docs/CLAUDE_START_HERE.md)
+- [`constitution/NAISMITH_CONSTITUTION.md`](constitution/NAISMITH_CONSTITUTION.md)
 
-This repository currently implements the **thin text-first slice** from the
-handoff (§14): it proves the governance skeleton before any autonomy, memory,
-voice, or external tools are introduced.
+## Core architecture
+
+1. **User authority** — the user remains in control.
+2. **Constitution and policy kernel** — every model, agent, memory operation, and
+   tool call is bounded outside the language model.
+3. **Legend Vault** — raw-first, portable, inspectable long-term records and
+   knowledge.
+4. **General-purpose runtime** — plans, retrieves, delegates, combines, and
+   reports work.
+5. **Agent Access Fabric** — connects supported outside models and agents through
+   official APIs, OAuth, MCP, local bridges, provider-native jobs, or
+   user-mediated handoffs.
+6. **Skills and workflows** — reusable procedures for many domains.
+
+External agents are specialists under Naismith. They do not replace Naismith,
+broaden their own permissions, or bypass its policy layer.
+
+## Subscription and API note
+
+Consumer subscriptions and developer API access are not automatically the same.
+
+The user may connect ChatGPT/OpenAI, Claude/Anthropic, GitHub, and other
+ecosystems only through supported, permissioned methods. Naismith must track the
+actual entitlement, scopes, rate limits, cost, and data restrictions for each
+connection. It must never scrape consumer sessions or store real credentials in
+this public repository.
+
+## Current status
+
+This repository currently implements a **governance-first text prototype**, not
+the complete product.
 
 What runs today:
 
-- A **FastAPI service** (`services/api/`) that surfaces the active Constitution,
-  runs a **deterministic policy engine outside the model** (deny-by-default),
-  drives a **mock model adapter**, and writes an **append-only audit trail**.
-- A **React web app** (`apps/web/`) — a transcript-first conversation screen
-  with a live governance panel.
-- An **executable constitutional test suite** that runs the code-enforceable
-  articles as live assertions and skips capabilities not yet built.
-- Docker Compose (API + Postgres + Redis) and CI (lint, type-check, tests,
-  secret scanning).
+- FastAPI service;
+- active Constitution endpoints;
+- deterministic deny-by-default policy layer;
+- mock model adapter;
+- text sessions;
+- append-only audit events;
+- React transcript UI with governance information;
+- shared JSON Schema contracts;
+- constitutional tests;
+- CI, secret scanning, and a bounded stress harness.
 
-Deliberately absent this phase: real model/voice providers, durable memory,
-external tools, and persistence.
+Not yet implemented:
+
+- real model providers;
+- Agent Access Fabric;
+- authenticated persistent projects and tasks;
+- Legend Vault retrieval;
+- governed memory;
+- external tools;
+- voice;
+- workflow modules;
+- simulations.
+
+## Corrected delivery order
+
+1. Stabilize the current branch and correct documentation.
+2. Build a persistent general-purpose text workspace with one real provider.
+3. Add Agent Access Fabric v1 for OpenAI, Anthropic, and supported GitHub agent
+   workflows.
+4. Add Legend Vault read-only retrieval with citations.
+5. Add governed memory.
+6. Add approved tool execution.
+7. Add voice and multimodal input.
+8. Add reusable workflows, including interviews.
+9. Add controlled simulation and evaluation.
+
+Build one narrow, tested vertical slice at a time.
 
 ## Layout
 
-```
-constitution/        The Constitution + its machine-loadable test registry
-docs/                The governing handoff / specification
-services/api/        FastAPI API + session gateway (Python)
-apps/web/            Voice-first client — text slice (TypeScript/React)
-packages/contracts/  Shared JSON Schemas (source of truth for boundary types)
-scripts/             run-tests.sh (mirrors CI)
+```text
+constitution/        Constitution and constitutional-test registry
+docs/                Governing handoff and development instructions
+services/api/        FastAPI service and runtime foundation
+apps/web/            React/TypeScript client
+packages/contracts/  Shared boundary schemas
+scripts/             Local test and bounded stress tooling
 ```
 
 ## Run locally
@@ -57,41 +105,36 @@ scripts/             run-tests.sh (mirrors CI)
 Requires Python 3.11+ and Node 22+.
 
 ```bash
-# API
-python -m venv .venv && source .venv/bin/activate
+python -m venv .venv
+source .venv/bin/activate
 pip install -e "services/api[dev]"
-naismith-api                      # http://127.0.0.1:8000
-
-# Web (in another shell)
-cd apps/web && npm install && npm run dev   # http://localhost:5173
+naismith-api
 ```
 
-Then open the web app, start a text session, send a message, and watch the
-Constitution version and audit events update. Or use Docker:
+In another shell:
 
 ```bash
-docker compose up --build         # API on :8000, Postgres, Redis
+cd apps/web
+npm install
+npm run dev
+```
+
+Or:
+
+```bash
+docker compose up --build
 ```
 
 ## Test
 
 ```bash
-./scripts/run-tests.sh            # API lint + types + tests, web build
+./scripts/run-tests.sh
+python scripts/stress_test.py
 ```
 
-Pre-ship load/robustness gate (bounded and self-cleaning — safe to run):
-
-```bash
-python scripts/stress_test.py     # ~30s; hard caps on requests, memory, and disk
-```
-
-It drives real concurrent HTTP load at a throwaway server instance and asserts
-the governance invariants hold under stress. Because the in-memory stores have
-no eviction this phase, the harness aborts if the server's RSS or the audit log
-crosses a cap. All limits are env-overridable (`STRESS_*`).
+Do not claim test or CI success unless it was actually executed and observed.
 
 ## Privacy
 
-Do not commit private exports, transcripts, recordings, generated records, real
-credentials, or personal artifacts. `.gitignore` excludes common runtime paths,
-and CI runs secret scanning — but review every commit before pushing.
+Never commit real credentials, private exports, raw handoffs, personal
+transcripts, recordings, private Legend Vault data, or generated user records.
