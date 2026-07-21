@@ -27,6 +27,8 @@ from dataclasses import dataclass, field
 from enum import StrEnum
 from typing import Any
 
+from .schemas import PolicyDecisionType
+
 # ---------------------------------------------------------------------------
 # Runtime states (§10.3)
 # ---------------------------------------------------------------------------
@@ -178,7 +180,7 @@ class AgentRuntime:
             if step.tool is not None:
                 tool_calls_attempted += 1
                 decision = self._policy_evaluator(step.tool, step.action, grants=None)
-                if decision.decision != "allow":
+                if decision.decision != PolicyDecisionType.ALLOW:
                     tool_calls_denied += 1
                     # Article X: deny-by-default; degrade gracefully (XIII.6).
                     # No tool grants exist in this phase.
