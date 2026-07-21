@@ -10,9 +10,10 @@ from __future__ import annotations
 import threading
 
 from . import audit as audit_mod
+from .agent_runtime import AgentRuntime, AgentState
 from .audit import AuditStore
 from .model_gateway import ModelProvider
-from .policy import POLICY_VERSION, evaluate_conversation_turn
+from .policy import POLICY_VERSION, evaluate_conversation_turn, evaluate_tool_operation
 from .schemas import (
     AuditEvent,
     CreateSessionRequest,
@@ -35,6 +36,12 @@ class SessionStore:
         self._lock = threading.Lock()
         self._sessions: dict[str, Session] = {}
         self._turns: dict[str, list[Turn]] = {}
+        # Hermes-style agent runtime (§10.3): policy-checked, bounded, stateful.
+        self._agent = AgentRuntime(
+            model=model,
+            policy_evaluator=evaluate_tool_operation,
+            policy_version=POLICY_VERSION,
+        )
 
     def create(self, req: CreateSessionRequest) -> Session:
         session = Session(
@@ -84,25 +91,38 @@ class SessionStore:
 
         user_turn = self._append_turn(session_id, Speaker.USER, text)
 
-        # Deterministic policy check, outside the model. A text turn exercises
-        # no tool authority; the untrusted message text is never passed to the
-        # authorization decision (see policy.py).
+        # Route the turn through the Hermes-style agent runtime (§10.3).
+        # The runtime runs the full state machine: IDLE -> RECEIVING -> PLANNING
+        # -> AWAITING_PERMISSION -> EXECUTING -> SYNTHESIZING -> COMPLETED.
+        # Tools are deny-by-default in this phase (Article X.1); the runtime
+        # degrades gracefully to plain conversation (Article XIII.6).
+        agent_result = self._agent.run(
+            session_id=session_id,
+            user_text=text,
+            workspace_id=session.workspace_id,
+        )
+
+        # The policy decision is still recorded for the conversational turn
+        # exactly as before (it always ALLOWs text conversation in this phase).
         decision = evaluate_conversation_turn()
 
-        result = self._model.generate(text)
-        assistant_turn = self._append_turn(session_id, Speaker.ASSISTANT, result.text)
+        assistant_turn = self._append_turn(
+            session_id, Speaker.ASSISTANT, agent_result.response_text
+        )
 
+        # Audit the exchange. The agent result carries provenance (model version,
+        # policy version, plan state) — exactly what Article XII requires.
         event = self._audit.record(
             AuditEvent(
                 session_id=session_id,
                 actor_type="agent",
                 actor_id="orchestrator",
                 event_type="message.exchanged",
-                policy_version=decision.policy_version,
-                model_version=result.model_version,
+                policy_version=agent_result.policy_version,
+                model_version=agent_result.model_version,
                 input_digest=audit_mod.digest(text),
-                result_digest=audit_mod.digest(result.text),
-                status="ok",
+                result_digest=audit_mod.digest(agent_result.response_text),
+                status="ok" if agent_result.state is AgentState.COMPLETED else "degraded",
                 correlation_id=user_turn.id,
             )
         )
@@ -112,6 +132,6 @@ class SessionStore:
             user_turn=user_turn,
             assistant_turn=assistant_turn,
             policy_decision=decision,
-            model_version=result.model_version,
+            model_version=agent_result.model_version,
             audit_event_id=event.id,
         )
