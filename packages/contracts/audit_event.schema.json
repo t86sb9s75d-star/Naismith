@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://naismith.dev/contracts/audit_event.schema.json",
+  "title": "AuditEvent",
+  "description": "Append-only audit record. Stores digests / safe summaries, never raw content (Constitution, Article XII.3).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "timestamp", "actor_type", "actor_id", "event_type", "status", "correlation_id"],
+  "properties": {
+    "id": { "type": "string", "format": "uuid" },
+    "timestamp": { "type": "string", "format": "date-time" },
+    "session_id": { "type": ["string", "null"] },
+    "actor_type": { "type": "string" },
+    "actor_id": { "type": "string" },
+    "event_type": { "type": "string" },
+    "policy_version": { "type": ["string", "null"] },
+    "model_version": { "type": ["string", "null"] },
+    "prompt_version": { "type": ["string", "null"] },
+    "tool_name": { "type": ["string", "null"] },
+    "authorization_ref": { "type": ["string", "null"] },
+    "input_digest": { "type": ["string", "null"] },
+    "result_digest": { "type": ["string", "null"] },
+    "status": { "type": "string" },
+    "error_code": { "type": ["string", "null"] },
+    "correlation_id": { "type": "string" }
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://naismith.dev/contracts/session.schema.json",
+  "title": "Session",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "mode", "status", "created_at", "policy_version", "model_route"],
+  "properties": {
+    "id": { "type": "string", "format": "uuid" },
+    "workspace_id": {
+      "type": ["string", "null"],
+      "description": "Null in local-first mode; set when multi-tenant scoping is enabled."
+    },
+    "mode": { "type": "string", "enum": ["text"] },
+    "status": { "type": "string", "enum": ["active", "ended"] },
+    "created_at": { "type": "string", "format": "date-time" },
+    "policy_version": { "type": "string" },
+    "model_route": { "type": "string" }
+  }
+}
