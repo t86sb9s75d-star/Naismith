@@ -33,7 +33,12 @@ it isn't really in the handoff. (Subagents are the strictest test of this — se
 "Handing off to a subagent" below.)
 
 It is the opposite of a summary. A summary decides what to drop; a raw handoff
-decides nothing away. The guiding instinct is **"when in doubt, keep it in."**
+decides nothing *load-bearing* away. The guiding instinct is **"when in doubt,
+keep it in"** — with one deliberate exception: secrets and unnecessary personal
+data are always left out (see "What never goes in" below). "Raw" means every
+decision, reason, instruction, and piece of state the next agent would otherwise
+have to re-derive or re-ask — not a verbatim transcript of every token. Keep the
+load-bearing content; you don't owe the recipient the small talk.
 
 The user's mental model (their words): *"a complete unedited raw handoff of a
 top-to-bottom memory of literally everything you can pull."* Honor that. The
@@ -60,6 +65,30 @@ the decision, the reason, or the piece of state the next agent actually needed.
 3. **Flag uncertainty, don't paper over it.** Anything you're unsure about gets
    an explicit `⚠️ UNCERTAIN:` marker with what you'd need to confirm it. A
    handoff that admits its gaps is far more useful than one that hides them.
+
+## What never goes in (the one exception to "keep it in")
+
+"When in doubt, keep it in" has exactly one hard exception: **secrets and
+unnecessary personal data never go into a handoff** — not even a git-ignored
+local one. A handoff is built to travel: it can be pasted into another session,
+handed to a subagent, attached to a message, or read by a different agent, and
+any of those paths can carry a secret somewhere it should never end up.
+
+Never write into the handoff:
+
+- **Credentials and secrets** — API keys, access tokens, passwords, private
+  keys, connection strings, session cookies, OAuth client secrets, raw `.env`
+  contents. Name them by identifier and location instead, value withheld: "the
+  OpenAI key lives in `.env` as `OPENAI_API_KEY` (value not reproduced)."
+- **Unnecessary personal data** — real personal transcripts, recordings,
+  private exports, or PII the *task* doesn't actually require. If a specific
+  piece of PII is genuinely load-bearing (e.g. the account the work is scoped
+  to), include the minimum needed to continue and nothing more.
+
+This does not weaken losslessness for anything else. Redact the secret, but keep
+the fact that it exists and where it lives — that pointer is what the next agent
+actually needs. When the two instincts collide, this one wins: leaking a
+credential is far worse than a handoff being one detail shorter.
 
 ## Method — how to actually pull "everything"
 
@@ -110,8 +139,12 @@ the filename is git-ignored (e.g. add `RAW_HANDOFF_*.md` to `.gitignore`) so it
 doesn't get committed or trip a "clean tree" check; otherwise write it outside
 the repo.
 
-Use this structure. Keep a section even if it's empty — write `(none)` so the
-next agent knows it was considered, not forgotten.
+Use this structure as a checklist, not a form to fill out. Include a section
+when it has real content. If a section would be empty, omit it rather than
+padding it with `(none)` — with one exception: when the emptiness is itself
+information (e.g. "no open threads — the work is genuinely finished, nothing
+parked"), keep the heading and say so in one line. Don't manufacture empty
+scaffolding, and never invent content to fill a heading.
 
 ```markdown
 # RAW HANDOFF — <one-line mission> — <UTC timestamp>
@@ -208,4 +241,6 @@ flagged), is the **reasoning** behind decisions captured (not just the
 outcomes), and are the **gaps** named honestly?
 
 Finally: prefer completeness. If you catch yourself trimming a detail to make it
-read cleaner, that's the summary instinct — resist it. Keep it in.
+read cleaner, that's the summary instinct — resist it. Keep it in. (The only
+things that always come out are secrets and unnecessary personal data — see
+"What never goes in.")
