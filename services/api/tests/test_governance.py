@@ -22,3 +22,11 @@ def test_constitutional_tests_registry_is_surfaced(client: TestClient) -> None:
     assert "policy_denies_by_default" in ids
     # Every case declares an enforcement status.
     assert all(case["status"] in {"enforced", "pending"} for case in body["cases"])
+
+
+def test_health_and_governance_agree_on_constitution_version(client: TestClient) -> None:
+    # Both endpoints must report the same active constitution version — they
+    # serve the copy loaded once at startup, so they cannot diverge.
+    health_version = client.get("/health").json()["constitution_version"]
+    governance_version = client.get("/v1/governance/constitution").json()["version"]
+    assert health_version == governance_version

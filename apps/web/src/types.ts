@@ -59,6 +59,12 @@ export interface AuditEvent {
   event_type: string;
   policy_version: string | null;
   model_version: string | null;
+  prompt_version: string | null;
+  tool_name: string | null;
+  authorization_ref: string | null;
+  input_digest: string | null;
+  result_digest: string | null;
   status: string;
+  error_code: string | null;
   correlation_id: string;
 }

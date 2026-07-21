@@ -1,6 +1,11 @@
 from __future__ import annotations
 
+from pathlib import Path
+
 from fastapi.testclient import TestClient
+
+from naismith_api.audit import AuditStore
+from naismith_api.schemas import AuditEvent
 
 
 def test_message_creates_audit_event_with_digests_not_content(client: TestClient) -> None:
@@ -35,3 +40,20 @@ def test_audit_log_is_append_only_on_disk(client: TestClient) -> None:
     lines = settings.audit_log_path.read_text(encoding="utf-8").strip().splitlines()
     # 1 session.created + 2 message.exchanged
     assert len(lines) == 3
+
+
+def test_audit_trail_survives_restart(tmp_path: Path) -> None:
+    path = tmp_path / "audit" / "events.jsonl"
+    store = AuditStore(path)
+    store.record(
+        AuditEvent(actor_type="user", actor_id="u", event_type="session.created", status="ok")
+    )
+    store.record(
+        AuditEvent(actor_type="agent", actor_id="o", event_type="message.exchanged", status="ok")
+    )
+
+    # Simulate a restart: a fresh store over the same on-disk log must replay
+    # the prior events, not surface an empty trail (Article XII).
+    reopened = AuditStore(path)
+    events = reopened.list()
+    assert [e.event_type for e in events] == ["session.created", "message.exchanged"]
