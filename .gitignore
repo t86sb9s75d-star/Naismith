@@ -253,6 +253,9 @@ embeddings/
 exports/
 artifacts/generated/
 
+# Raw session handoffs (/raw skill) — local artifacts, never commit to a public repo
+RAW_HANDOFF_*.md
+
 # IDE / OS
 .DS_Store
 .idea/

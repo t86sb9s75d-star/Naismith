@@ -104,6 +104,12 @@ Write the handoff to a file: `RAW_HANDOFF_<UTC-timestamp>.md` in the current
 working directory (or a path the user specifies). Then tell the user the path.
 Also offer to print it inline if they want it in the conversation.
 
+A handoff is a **local artifact** — it can contain session detail, so **never
+commit it to a public repository**. If you write it inside a git repo, make sure
+the filename is git-ignored (e.g. add `RAW_HANDOFF_*.md` to `.gitignore`) so it
+doesn't get committed or trip a "clean tree" check; otherwise write it outside
+the repo.
+
 Use this structure. Keep a section even if it's empty — write `(none)` so the
 next agent knows it was considered, not forgotten.
 
