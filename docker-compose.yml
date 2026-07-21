@@ -1,0 +1,55 @@
+# Local development stack for the Phase 0/1 slice.
+#
+# The API runs fully in-memory today, so Postgres and Redis are not yet wired
+# into it — they are provisioned here so the environment matches Phase 1 (the
+# system of record + ephemeral session state) and so `docker compose up` is the
+# one command a contributor needs. No real secrets appear here; everything uses
+# throwaway local development values.
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: services/api/Dockerfile
+    environment:
+      NAISMITH_ENV: development
+      NAISMITH_CORS_ORIGINS: http://localhost:5173
+      # Provided for Phase 1; unused by the current in-memory slice.
+      DATABASE_URL: postgresql+psycopg://naismith:naismith@postgres:5432/naismith
+      REDIS_URL: redis://redis:6379/0
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: naismith
+      POSTGRES_PASSWORD: naismith
+      POSTGRES_DB: naismith
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U naismith"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  pgdata:

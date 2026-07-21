@@ -1,0 +1,12 @@
+from __future__ import annotations
+
+from fastapi.testclient import TestClient
+
+
+def test_health_ok(client: TestClient) -> None:
+    resp = client.get("/health")
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["status"] == "ok"
+    assert body["service"] == "naismith-api"
+    assert body["constitution_version"] == "1.0.0"

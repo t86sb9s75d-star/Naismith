@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://naismith.dev/contracts/policy_decision.schema.json",
+  "title": "PolicyDecision",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["decision", "policy_version", "reason"],
+  "properties": {
+    "decision": {
+      "type": "string",
+      "enum": ["allow", "allow_with_confirmation", "deny"]
+    },
+    "policy_version": { "type": "string" },
+    "reason": { "type": "string" },
+    "rules_evaluated": {
+      "type": "array",
+      "items": { "type": "string" },
+      "default": []
+    },
+    "required_actions": {
+      "type": "array",
+      "items": { "type": "string" },
+      "default": []
+    }
+  }
+}

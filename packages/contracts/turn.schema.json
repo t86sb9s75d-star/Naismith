@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://naismith.dev/contracts/turn.schema.json",
+  "title": "Turn",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "session_id", "sequence_number", "speaker", "text", "created_at"],
+  "properties": {
+    "id": { "type": "string", "format": "uuid" },
+    "session_id": { "type": "string", "format": "uuid" },
+    "sequence_number": { "type": "integer", "minimum": 0 },
+    "speaker": { "type": "string", "enum": ["user", "assistant"] },
+    "text": { "type": "string" },
+    "created_at": { "type": "string", "format": "date-time" },
+    "safety_labels": {
+      "type": "array",
+      "items": { "type": "string" },
+      "default": []
+    }
+  }
+}

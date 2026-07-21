@@ -216,3 +216,43 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# ─── Naismith ───────────────────────────────────────────────────────────────
+# Secrets and local config (never commit filled values)
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+secrets/
+
+# Node / web app
+node_modules/
+apps/web/dist/
+apps/web/node_modules/
+.next/
+dist/
+build/
+
+# Local runtime data and private artifacts (Article VI: keep private data out of VCS)
+.naismith/
+data/private/
+data/raw/
+recordings/
+transcripts/private/
+*.sqlite
+*.db
+
+# Legend Vault mounts and indexes
+legend-vault/
+.obsidian/workspace*.json
+indexes/
+embeddings/
+
+# Generated exports
+exports/
+artifacts/generated/
+
+# IDE / OS
+.DS_Store
+.idea/
