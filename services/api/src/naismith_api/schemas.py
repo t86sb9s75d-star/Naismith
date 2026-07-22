@@ -145,6 +145,13 @@ class MessageResponse(BaseModel):
     policy_decision: PolicyDecision
     model_version: str
     audit_event_id: str
+    # Model-call provenance (handoff §11): provider, per-turn usage/cost, and
+    # the running session cost total. Zero for the free mock provider.
+    provider: str = "mock"
+    prompt_tokens: int = 0
+    completion_tokens: int = 0
+    cost_usd: float = 0.0
+    session_cost_usd: float = 0.0
 
 
 class HealthResponse(BaseModel):
@@ -152,3 +159,22 @@ class HealthResponse(BaseModel):
     service: str = "naismith-api"
     version: str
     constitution_version: str
+
+
+# --- Model providers (entitlement view) --------------------------------------
+
+
+class ModelProviderInfo(BaseModel):
+    name: str
+    model_version: str
+    is_default: bool
+    # ``live`` = can actually produce output this phase (only the mock can).
+    # ``configured`` = a credential is present (an entitlement signal, not a
+    # promise the provider is live).
+    live: bool
+    configured: bool
+
+
+class ModelProvidersResponse(BaseModel):
+    default_provider: str
+    providers: list[ModelProviderInfo]

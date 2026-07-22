@@ -27,6 +27,7 @@ from dataclasses import dataclass, field
 from enum import StrEnum
 from typing import Any
 
+from .model_gateway import ModelUsage
 from .schemas import PolicyDecisionType
 
 # ---------------------------------------------------------------------------
@@ -120,6 +121,10 @@ class AgentResult:
     # Article V: always carry provenance on what the response was based on.
     model_version: str
     policy_version: str
+    # Provider + cost/usage provenance from the gateway (handoff §11).
+    provider: str = ""
+    usage: ModelUsage = field(default_factory=ModelUsage)
+    cost_usd: float = 0.0
     tool_calls_attempted: int = 0
     tool_calls_denied: int = 0
     degraded_to_conversation: bool = False
@@ -220,6 +225,9 @@ class AgentRuntime:
                 elapsed_seconds=elapsed,
                 model_version=result.model_version,
                 policy_version=self._policy_version,
+                provider=result.provider,
+                usage=result.usage,
+                cost_usd=result.cost_usd,
                 tool_calls_attempted=tool_calls_attempted,
                 tool_calls_denied=tool_calls_denied,
                 degraded_to_conversation=True,
@@ -239,6 +247,9 @@ class AgentRuntime:
             elapsed_seconds=time.monotonic() - start,
             model_version=result.model_version,
             policy_version=self._policy_version,
+            provider=result.provider,
+            usage=result.usage,
+            cost_usd=result.cost_usd,
             tool_calls_attempted=tool_calls_attempted,
             tool_calls_denied=tool_calls_denied,
             degraded_to_conversation=degraded,

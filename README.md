@@ -54,9 +54,14 @@ What runs today:
 - FastAPI service;
 - active Constitution endpoints;
 - deterministic deny-by-default policy layer;
-- mock model adapter;
-- text sessions;
-- append-only audit events;
+- a bounded, policy-checked agent runtime (Hermes-style state machine);
+- a model gateway with a provider registry, explicit selection, timeouts,
+  retries, normalized errors, and per-turn cost/usage — backed by a
+  deterministic mock provider (a real Anthropic provider is scaffolded but
+  inert: no network call, no paid usage);
+- durable persistence for sessions, turns, audit events, and model-call cost
+  (SQLAlchemy + Alembic migrations; SQLite locally, Postgres-ready);
+- text sessions with an append-only audit trail;
 - React transcript UI with governance information;
 - shared JSON Schema contracts;
 - constitutional tests;
@@ -64,9 +69,9 @@ What runs today:
 
 Not yet implemented:
 
-- real model providers;
+- live model providers (the real gateway exists; no provider is activated yet);
 - Agent Access Fabric;
-- authenticated persistent projects and tasks;
+- authentication and workspace isolation;
 - Legend Vault retrieval;
 - governed memory;
 - external tools;
