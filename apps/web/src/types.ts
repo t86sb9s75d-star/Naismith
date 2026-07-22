@@ -40,6 +40,13 @@ export interface MessageResponse {
   policy_decision: PolicyDecision;
   model_version: string;
   audit_event_id: string;
+  // Model-call provenance (handoff §11): provider + per-turn usage/cost and the
+  // running session total. Zero for the free mock provider.
+  provider: string;
+  prompt_tokens: number;
+  completion_tokens: number;
+  cost_usd: number;
+  session_cost_usd: number;
 }
 
 export interface ConstitutionInfo {

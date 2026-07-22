@@ -8,7 +8,8 @@ COPY services/api/pyproject.toml services/api/README.md ./services/api/
 COPY services/api/src ./services/api/src
 COPY constitution ./constitution
 
-RUN pip install --no-cache-dir ./services/api
+# Include the Postgres driver: the composed stack uses DATABASE_URL=postgres...
+RUN pip install --no-cache-dir "./services/api[postgres]"
 
 ENV NAISMITH_HOST=0.0.0.0 \
     NAISMITH_PORT=8000 \
