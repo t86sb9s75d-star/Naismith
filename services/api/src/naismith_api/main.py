@@ -62,8 +62,13 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         tags=["governance"],
     )
     def get_constitution() -> ConstitutionInfo:
-        # Re-read so an edited constitution is reflected without a restart.
-        return load_constitution(settings)
+        # Serve the constitution loaded once at startup — the same object
+        # /health reports — so the two endpoints can never disagree on the
+        # active version. This also matches governance intent: a running
+        # instance operates under one fixed constitution for its lifetime;
+        # adopting a new version is a deploy/restart, not a silent hot-swap
+        # (Article III). A future audited admin reload can supersede this.
+        return constitution
 
     @app.get(
         "/v1/governance/constitutional-tests",

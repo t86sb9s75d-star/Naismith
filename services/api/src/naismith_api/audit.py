@@ -31,6 +31,29 @@ class AuditStore:
         self._lock = threading.Lock()
         self._events: list[AuditEvent] = []
         self._log_path.parent.mkdir(parents=True, exist_ok=True)
+        self._load_existing()
+
+    def _load_existing(self) -> None:
+        """Replay the append-only log so the audit trail survives restarts.
+
+        ``list()`` reads the in-memory mirror, so without replaying the log a
+        restart would surface an empty audit trail even though the on-disk log
+        still holds prior events — which would defeat the point of an audit
+        trail (Article XII). Postgres replaces this dev store in Phase 1.
+        """
+        if not self._log_path.exists():
+            return
+        with self._log_path.open("r", encoding="utf-8") as fh:
+            for raw in fh:
+                line = raw.strip()
+                if not line:
+                    continue
+                try:
+                    self._events.append(AuditEvent.model_validate_json(line))
+                except ValueError:
+                    # A malformed / partially-written line must not crash
+                    # startup; skip it and keep the rest of the trail.
+                    continue
 
     def record(self, event: AuditEvent) -> AuditEvent:
         line = event.model_dump_json()
