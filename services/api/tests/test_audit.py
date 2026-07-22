@@ -5,6 +5,7 @@ from pathlib import Path
 from fastapi.testclient import TestClient
 
 from naismith_api.audit import AuditStore
+from naismith_api.db import Database
 from naismith_api.schemas import AuditEvent
 
 
@@ -31,20 +32,23 @@ def test_message_creates_audit_event_with_digests_not_content(client: TestClient
     assert secret_text not in serialized
 
 
-def test_audit_log_is_append_only_on_disk(client: TestClient) -> None:
-    settings = client.app.state.settings  # type: ignore[attr-defined]
+def test_audit_events_recorded_once_per_action(client: TestClient) -> None:
     session_id = client.post("/v1/sessions", json={}).json()["id"]
     client.post(f"/v1/sessions/{session_id}/messages", json={"text": "one"})
     client.post(f"/v1/sessions/{session_id}/messages", json={"text": "two"})
 
-    lines = settings.audit_log_path.read_text(encoding="utf-8").strip().splitlines()
-    # 1 session.created + 2 message.exchanged
-    assert len(lines) == 3
+    events = client.get(
+        "/v1/governance/audit-events", params={"session_id": session_id}
+    ).json()
+    # 1 session.created + 2 message.exchanged, durably recorded.
+    assert len(events) == 3
 
 
 def test_audit_trail_survives_restart(tmp_path: Path) -> None:
-    path = tmp_path / "audit" / "events.jsonl"
-    store = AuditStore(path)
+    url = f"sqlite:///{tmp_path / 'audit.db'}"
+    db = Database(url)
+    db.create_all()
+    store = AuditStore(db)
     store.record(
         AuditEvent(actor_type="user", actor_id="u", event_type="session.created", status="ok")
     )
@@ -52,8 +56,8 @@ def test_audit_trail_survives_restart(tmp_path: Path) -> None:
         AuditEvent(actor_type="agent", actor_id="o", event_type="message.exchanged", status="ok")
     )
 
-    # Simulate a restart: a fresh store over the same on-disk log must replay
-    # the prior events, not surface an empty trail (Article XII).
-    reopened = AuditStore(path)
+    # Simulate a restart: a fresh Database + store over the same on-disk file
+    # must see the prior events, not an empty trail (Article XII).
+    reopened = AuditStore(Database(url))
     events = reopened.list()
     assert [e.event_type for e in events] == ["session.created", "message.exchanged"]

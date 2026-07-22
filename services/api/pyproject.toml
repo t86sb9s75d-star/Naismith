@@ -14,6 +14,8 @@ dependencies = [
     "uvicorn>=0.30",
     "pydantic>=2.6",
     "pyyaml>=6.0",
+    "sqlalchemy>=2.0",
+    "alembic>=1.13",
 ]
 
 [project.optional-dependencies]
@@ -23,6 +25,11 @@ dev = [
     "ruff>=0.5",
     "mypy>=1.10",
     "types-PyYAML>=6.0",
+]
+# Postgres driver for the hosted stack. Not needed for the SQLite default that
+# local dev, tests, and CI use, so it stays out of the base dependencies.
+postgres = [
+    "psycopg[binary]>=3.1",
 ]
 
 [project.scripts]

@@ -13,8 +13,8 @@ from naismith_api.main import create_app
 @pytest.fixture
 def settings(tmp_path: Path) -> Settings:
     # Use the real committed constitution + test registry, but an isolated,
-    # throwaway audit log so tests never touch the shared dev log.
-    return Settings(audit_log_path=tmp_path / "audit" / "events.jsonl")
+    # throwaway SQLite database so tests never touch the shared dev store.
+    return Settings(database_url=f"sqlite:///{tmp_path / 'naismith.db'}")
 
 
 @pytest.fixture

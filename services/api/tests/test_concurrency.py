@@ -5,7 +5,9 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 from naismith_api.audit import AuditStore
+from naismith_api.db import Database
 from naismith_api.model_gateway import ModelResult
+from naismith_api.repositories import ModelCallRepository, SessionRepository
 from naismith_api.schemas import CreateSessionRequest, MessageResponse
 from naismith_api.sessions import SessionStore
 
@@ -17,6 +19,10 @@ class _SlowModel:
     MODEL_VERSION = "slow-test-model"
 
     @property
+    def name(self) -> str:
+        return "slow"
+
+    @property
     def model_version(self) -> str:
         return self.MODEL_VERSION
 
@@ -26,7 +32,14 @@ class _SlowModel:
 
 
 def test_concurrent_same_session_turns_stay_paired(tmp_path: Path) -> None:
-    store = SessionStore(model=_SlowModel(), audit=AuditStore(tmp_path / "audit.jsonl"))
+    db = Database(f"sqlite:///{tmp_path / 'naismith.db'}")
+    db.create_all()
+    store = SessionStore(
+        model=_SlowModel(),
+        audit=AuditStore(db),
+        sessions=SessionRepository(db),
+        model_calls=ModelCallRepository(db),
+    )
     session = store.create(CreateSessionRequest())
 
     def send(i: int) -> MessageResponse:
